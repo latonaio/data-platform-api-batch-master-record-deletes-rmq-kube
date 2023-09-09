@@ -63,7 +63,7 @@ type SDC struct {
 	BusinessPartner  int      `json:"business_partner"`
 	ServiceLabel     string   `json:"service_label"`
 	APIType          string   `json:"api_type"`
-	Header           Header   `json:"BatchMasterRecord"`
+	Batch            Batch    `json:"BatchMasterRecord"`
 	APISchema        string   `json:"api_schema"`
 	Accepter         []string `json:"accepter"`
 	Deleted          bool     `json:"deleted"`
@@ -74,14 +74,5 @@ type Batch struct {
 	BusinessPartner     int     `json:BusinessPartner`
 	Plant               string  `json:Plant`
 	Batch               string  `json:Batch`
-	ValidityStartDate   *string `json:ValidityStartDate`
-	ValidityStartTime   *string `json:ValidityStartTime`
-	ValidityEndDate     *string `json:ValidityEndDate`
-	ValidityEndTime     *string `json:ValidityEndTime`
-	ManufactureDate     *string `json:ManufactureDate`
-	CreationDate        *string `json:CreationDate`
-	CreationTime        *string `json:CreationTime`
-	LastChangeDate      *string `json:LastChangeDate`
-	LastChangeTime      *string `json:LastChangeTime`
-	IsMarkedForDeletion *int    `json:IsMarkedForDeletion`
+	IsMarkedForDeletion *bool   `json:IsMarkedForDeletion`
 }

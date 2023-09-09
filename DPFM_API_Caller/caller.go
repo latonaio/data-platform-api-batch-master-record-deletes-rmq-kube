@@ -50,42 +50,36 @@ func (c *DPFMAPICaller) deleteSqlProcess(
 	accepter []string,
 	log *logger.Logger,
 ) *dpfm_api_output_formatter.Message {
-	var headerData *dpfm_api_output_formatter.Header
-	itemData := make([]dpfm_api_output_formatter.Item, 0)
+	var batchData *dpfm_api_output_formatter.Batch
 	for _, a := range accepter {
 		switch a {
-		case "Header":
-			h, i := c.headerDelete(input, output, log)
-			headerData = h
+		case "Batch":
+			h, i := c.batchDelete(input, output, log)
+			batchData = h
 			if h == nil || i == nil {
 				continue
 			}
-			itemData = append(itemData, *i...)
-		case "Item":
-			i := c.itemDelete(input, output, log)
-			if i == nil {
-				continue
-			}
-			itemData = append(itemData, *i...)
 		}
 	}
 
 	return &dpfm_api_output_formatter.Message{
-		Header: headerData,
-		Item:   &itemData,
+		Batch: batchData,
 	}
 }
 
-func (c *DPFMAPICaller) headerDelete(
+func (c *DPFMAPICaller) batchDelete(
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	log *logger.Logger,
-) (*dpfm_api_output_formatter.Header, *[]dpfm_api_output_formatter.Item) {
+) (*dpfm_api_output_formatter.Batch) {
 	sessionID := input.RuntimeSessionID
-	header := c.HeaderRead(input, log)
-	header.BatchMasterRecord = input.Header.BatchMasterRecord
-	header.IsMarkedForDeletion = input.Header.IsMarkedForDeletion
-	res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": header, "function": "BatchMasterRecordHeader", "runtime_session_id": sessionID})
+	batch := c.BatchRead(input, log)
+	batch.Product = input.Batch.Product
+	batch.BusinessPartner = input.Batch.BusinessPartner
+	batch.Plant = input.Batch.Plant
+	batch.Batch = input.Batch.Batch
+	batch.IsMarkedForDeletion = input.Batch.IsMarkedForDeletion
+	res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": header, "function": "BatchMasterRecordBatch", "runtime_session_id": sessionID})
 	if err != nil {
 		err = xerrors.Errorf("rmq error: %w", err)
 		log.Error("%+v", err)
@@ -94,85 +88,11 @@ func (c *DPFMAPICaller) headerDelete(
 	res.Success()
 	if !checkResult(res) {
 		output.SQLUpdateResult = getBoolPtr(false)
-		output.SQLUpdateError = "Header Data cannot delete"
+		output.SQLUpdateError = "Batch Data cannot delete"
 		return nil, nil
 	}
 
-	// headerの削除が取り消された時は子に影響を与えない
-	if !*header.IsMarkedForDeletion {
-		return header, nil
-	}
-
-	items := c.ItemsRead(input, log)
-	for i := range *items {
-		(*items)[i].IsMarkedForDeletion = input.Header.IsMarkedForDeletion
-		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": (*items)[i], "function": "BatchMasterRecordItem", "runtime_session_id": sessionID})
-		if err != nil {
-			err = xerrors.Errorf("rmq error: %w", err)
-			log.Error("%+v", err)
-			return nil, nil
-		}
-		res.Success()
-		if !checkResult(res) {
-			output.SQLUpdateResult = getBoolPtr(false)
-			output.SQLUpdateError = "Item Data cannot delete"
-			return nil, nil
-		}
-	}
-
-	return header, items
-}
-
-func (c *DPFMAPICaller) itemDelete(
-	input *dpfm_api_input_reader.SDC,
-	output *dpfm_api_output_formatter.SDC,
-	log *logger.Logger,
-) *[]dpfm_api_output_formatter.Item {
-	sessionID := input.RuntimeSessionID
-
-	items := make([]dpfm_api_output_formatter.Item, 0)
-	for _, v := range input.Header.Item {
-		data := dpfm_api_output_formatter.Item{
-			BatchMasterRecord:     input.Header.BatchMasterRecord,
-			BatchMasterRecordItem: v.BatchMasterRecordItem,
-			IsMarkedForDeletion:   v.IsMarkedForDeletion,
-		}
-		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{
-			"message":            data,
-			"function":           "BatchMasterRecordItem",
-			"runtime_session_id": sessionID,
-		})
-		if err != nil {
-			err = xerrors.Errorf("rmq error: %w", err)
-			log.Error("%+v", err)
-			return nil
-		}
-		res.Success()
-		if !checkResult(res) {
-			output.SQLUpdateResult = getBoolPtr(false)
-			output.SQLUpdateError = "BatchMasterRecord Item Data cannot delete"
-			return nil
-		}
-	}
-	// itemがキャンセル取り消しされた場合、headerのキャンセルも取り消す
-	if !*input.BatchMasterRecord.Item[0].IsMarkedForDeletion {
-		header := c.HeaderRead(input, log)
-		header.IsMarkedForDeletion = input.Header.Item[0].IsMarkedForDeletion
-		res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": header, "function": "BatchMasterRecordHeader", "runtime_session_id": sessionID})
-		if err != nil {
-			err = xerrors.Errorf("rmq error: %w", err)
-			log.Error("%+v", err)
-			return nil
-		}
-		res.Success()
-		if !checkResult(res) {
-			output.SQLUpdateResult = getBoolPtr(false)
-			output.SQLUpdateError = "Header Data cannot delete"
-			return nil
-		}
-	}
-
-	return &items
+	return batch
 }
 
 func checkResult(msg rabbitmq.RabbitmqMessage) bool {

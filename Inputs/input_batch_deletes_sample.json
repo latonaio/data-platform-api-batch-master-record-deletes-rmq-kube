@@ -6,14 +6,17 @@
 	"api_status_code": 200,
 	"runtime_session_id": "boi9ar543dg91ipdnspi099u231280ab0v8af0ew",
 	"business_partner": 201,
-	"service_label": "BATCH-MASTER-RECORD",
+	"service_label": "BATCH_MASTER_RECORD",
 	"api_type": "deletes",
 	"BatchMasterRecord": {
-		"BatchMasterRecord": 112210,
+		"Product": "",
+		"BusinessPartner": null,
+		"Plant": "",
+		"Batch": "",
 		"IsMarkedForDeletion": true
 	},
 	"api_schema": "DPFMBatchMasterRecordDeletes",
 	"accepter": [
-		"Header"
+		"Batch"
 	]
 }

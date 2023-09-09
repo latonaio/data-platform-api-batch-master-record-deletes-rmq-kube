@@ -25,8 +25,7 @@ type SDC struct {
 }
 
 type Message struct {
-	Header *Header `json:"Header"`
-	Item   *[]Item `json:"Item"`
+	Batch *Batch `json:"Batch"`
 }
 
 type Batch struct {
@@ -34,14 +33,5 @@ type Batch struct {
 	BusinessPartner     int    `json:BusinessPartner`
 	Plant               string `json:Plant`
 	Batch               string `json:Batch`
-	ValidityStartDate   string `json:ValidityStartDate`
-	ValidityStartTime   string `json:ValidityStartTime`
-	ValidityEndDate     string `json:ValidityEndDate`
-	ValidityEndTime     string `json:ValidityEndTime`
-	ManufactureDate     string `json:ManufactureDate`
-	CreationDate        string `json:CreationDate`
-	CreationTime        string `json:CreationTime`
-	LastChangeDate      string `json:LastChangeDate`
-	LastChangeTime      string `json:LastChangeTime`
-	IsMarkedForDeletion *int   `json:IsMarkedForDeletion`
+	IsMarkedForDeletion *bool  `json:IsMarkedForDeletion`
 }

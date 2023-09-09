@@ -5,53 +5,30 @@ import (
 	"fmt"
 )
 
-func ConvertToHeader(rows *sql.Rows) (*Header, error) {
+func ConvertToBatch(rows *sql.Rows) (*Batch, error) {
 	defer rows.Close()
-	header := Header{}
+	batch := Batch{}
 	i := 0
 
 	for rows.Next() {
 		i++
 		err := rows.Scan(
-			&header.BatchMasterRecord,
+			&batch.Product,
+			&batch.BusinessPartner,
+			&batch.Plant,
+			&batch.Batch,
+			&batch.IsMarkedForDeletion,
 		)
 		if err != nil {
 			fmt.Printf("err = %+v \n", err)
-			return &header, err
+			return &batch, err
 		}
 
 	}
 	if i == 0 {
 		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &header, nil
+		return &batch, nil
 	}
 
-	return &header, nil
-}
-
-func ConvertToItem(rows *sql.Rows) (*[]Item, error) {
-	defer rows.Close()
-	items := make([]Item, 0)
-	i := 0
-
-	for rows.Next() {
-		i++
-		item := Item{}
-		err := rows.Scan(
-			&item.BatchMasterRecord,
-			&item.BatchMasterRecordItem,
-		)
-		if err != nil {
-			fmt.Printf("err = %+v \n", err)
-			return &items, err
-		}
-
-		items = append(items, item)
-	}
-	if i == 0 {
-		fmt.Printf("DBに対象のレコードが存在しません。")
-		return &items, nil
-	}
-
-	return &items, nil
+	return &batch, nil
 }
