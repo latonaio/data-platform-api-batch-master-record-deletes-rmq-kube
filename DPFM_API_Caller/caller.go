@@ -71,7 +71,7 @@ func (c *DPFMAPICaller) batchDelete(
 	input *dpfm_api_input_reader.SDC,
 	output *dpfm_api_output_formatter.SDC,
 	log *logger.Logger,
-) (*dpfm_api_output_formatter.Batch) {
+) *dpfm_api_output_formatter.Batch {
 	sessionID := input.RuntimeSessionID
 	batch := c.BatchRead(input, log)
 	batch.Product = input.Batch.Product
@@ -83,13 +83,13 @@ func (c *DPFMAPICaller) batchDelete(
 	if err != nil {
 		err = xerrors.Errorf("rmq error: %w", err)
 		log.Error("%+v", err)
-		return nil, nil
+		return nil
 	}
 	res.Success()
 	if !checkResult(res) {
 		output.SQLUpdateResult = getBoolPtr(false)
 		output.SQLUpdateError = "Batch Data cannot delete"
-		return nil, nil
+		return nil
 	}
 
 	return batch
