@@ -54,9 +54,9 @@ func (c *DPFMAPICaller) deleteSqlProcess(
 	for _, a := range accepter {
 		switch a {
 		case "Batch":
-			h, i := c.batchDelete(input, output, log)
+			h := c.batchDelete(input, output, log)
 			batchData = h
-			if h == nil || i == nil {
+			if h == nil {
 				continue
 			}
 		}
@@ -79,7 +79,7 @@ func (c *DPFMAPICaller) batchDelete(
 	batch.Plant = input.Batch.Plant
 	batch.Batch = input.Batch.Batch
 	batch.IsMarkedForDeletion = input.Batch.IsMarkedForDeletion
-	res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": header, "function": "BatchMasterRecordBatch", "runtime_session_id": sessionID})
+	res, err := c.rmq.SessionKeepRequest(nil, c.conf.RMQ.QueueToSQL()[0], map[string]interface{}{"message": batch, "function": "BatchMasterRecordBatch", "runtime_session_id": sessionID})
 	if err != nil {
 		err = xerrors.Errorf("rmq error: %w", err)
 		log.Error("%+v", err)
